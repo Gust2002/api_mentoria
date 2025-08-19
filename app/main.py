@@ -6,6 +6,7 @@ from app.schemas import Mentor, MentorCreate # Importação a partir do schemas.
 from app.database import engine, SessionLocal
 import app.models as models
 from sqlalchemy.orm import Session
+from app import schemas 
 
 models.Base.metadata.create_all(bind=engine)
 
