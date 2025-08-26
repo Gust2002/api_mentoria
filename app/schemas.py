@@ -32,3 +32,16 @@ class Mentor(MentorBase):
         return valor
     class Config:
         from_attributes = True
+        
+class UserBase(BaseModel):
+    user_email: EmailStr
+    
+class UserCreate(UserBase):
+    password: str
+    
+class User(UserBase):
+    id: int
+    is_active: bool
+    
+    class Config:
+        from_attributes = True

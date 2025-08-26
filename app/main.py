@@ -6,7 +6,9 @@ from app.schemas import Mentor, MentorCreate # Importação a partir do schemas.
 from app.database import engine, SessionLocal
 import app.models as models
 from sqlalchemy.orm import Session
-from app import schemas 
+from app import schemas
+from . import auth
+from sqlalchemy.exc import IntegrityError 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -108,3 +110,26 @@ def delete_mentor(mentor_id: int, db: Session = Depends(get_db)):
    logging.info(f"Mentor com ID {mentor_id} ({mentor_to_delete.name}) foi deletado com sucesso.")
    
    return None
+# Endpoint: rota para CRIAR um novo usuário (Registro)
+
+@app.post("/users", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+   """
+   Função responsável por criar um novo usuário no DB
+   """
+   # Transforma a senha digitada ou escolhida em um hash (criptografada) antes de salvar.
+   hashed_password = auth.get_password_hash(user.password)
+   
+   db_user = models.User(user_email=user.user_email, hashed_password=hashed_password)
+   
+   try:
+      db.add(db_user)
+      db.commit()
+      db.refresh(db_user)
+      return db_user
+   except IntegrityError:
+      db.rollback()
+      raise HTTPException(
+         status_code=status.HTTP_409_CONFLICT,
+         detail=f"Usuário com o e-mail '{user.user_email} já existe."
+      )
